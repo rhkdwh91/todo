@@ -6,6 +6,12 @@ import { removeReferenceFromTodos } from '../utils/validation';
 
 const BASE_URL = '/api';
 
+const getNextId = (todos: Todo[]): string => {
+  if (todos.length === 0) return '1';
+  const maxId = Math.max(...todos.map((todo) => parseInt(todo.id, 10)));
+  return String(maxId + 1);
+};
+
 export const handlers = [
   http.get(`${BASE_URL}/todos`, async ({ request }) => {
     await delay(300);
@@ -61,7 +67,7 @@ export const handlers = [
     const todos = getTodos();
 
     const newTodo: Todo = {
-      id: String(Date.now()),
+      id: getNextId(todos),
       text: body.text,
       completed: false,
       createdAt: getCurrentISODate(),
