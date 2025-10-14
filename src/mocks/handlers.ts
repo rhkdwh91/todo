@@ -15,7 +15,8 @@ export const handlers = [
     const limit = parseInt(url.searchParams.get('limit') || '10');
     const filter = url.searchParams.get('filter') || 'all';
 
-    let todos = getTodos();
+    const allTodos = getTodos();
+    let todos = allTodos;
 
     if (filter === 'active') {
       todos = todos.filter((todo) => !todo.completed);
@@ -34,9 +35,23 @@ export const handlers = [
       page,
       limit,
       totalPages: Math.ceil(total / limit),
+      allTodos,
     };
 
     return HttpResponse.json(response);
+  }),
+
+  http.get(`${BASE_URL}/todos/by-ids`, async ({ request }) => {
+    await delay(100);
+
+    const url = new URL(request.url);
+    const idsParam = url.searchParams.get('ids') || '';
+    const ids = idsParam.split(',').filter(Boolean);
+
+    const todos = getTodos();
+    const filteredTodos = todos.filter((todo) => ids.includes(todo.id));
+
+    return HttpResponse.json(filteredTodos);
   }),
 
   http.post(`${BASE_URL}/todos`, async ({ request }) => {
@@ -58,6 +73,30 @@ export const handlers = [
     saveTodos(todos);
 
     return HttpResponse.json(newTodo, { status: 201 });
+  }),
+
+  http.patch(`${BASE_URL}/todos/batch`, async ({ request }) => {
+    await delay(300);
+
+    const body = (await request.json()) as { updates: { id: string; data: Partial<Todo> }[] };
+    const todos = getTodos();
+    const updatedTodos: Todo[] = [];
+
+    body.updates.forEach(({ id, data }) => {
+      const index = todos.findIndex((todo) => todo.id === id);
+      if (index !== -1) {
+        todos[index] = {
+          ...todos[index],
+          ...data,
+          updatedAt: getCurrentISODate(),
+        };
+        updatedTodos.push(todos[index]);
+      }
+    });
+
+    saveTodos(todos);
+
+    return HttpResponse.json(updatedTodos);
   }),
 
   http.patch(`${BASE_URL}/todos/:id`, async ({ request, params }) => {

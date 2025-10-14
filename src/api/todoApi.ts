@@ -9,6 +9,14 @@ export const todoApi = {
     return response.data;
   },
 
+  getTodosByIds: async (ids: string[]) => {
+    if (ids.length === 0) return [];
+    const response = await apiClient.get<Todo[]>('/todos/by-ids', {
+      params: { ids: ids.join(',') },
+    });
+    return response.data;
+  },
+
   createTodo: async (data: TodoFormData) => {
     const response = await apiClient.post<Todo>('/todos', data);
     return response.data;
@@ -16,6 +24,11 @@ export const todoApi = {
 
   updateTodo: async (id: string, data: Partial<Todo>) => {
     const response = await apiClient.patch<Todo>(`/todos/${id}`, data);
+    return response.data;
+  },
+
+  batchUpdateTodos: async (updates: { id: string; data: Partial<Todo> }[]) => {
+    const response = await apiClient.patch<Todo[]>('/todos/batch', { updates });
     return response.data;
   },
 

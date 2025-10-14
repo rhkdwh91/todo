@@ -17,3 +17,20 @@ export function removeReferenceFromTodos(todoIdToRemove: string, todos: Todo[]):
     references: todo.references.filter((refId) => refId !== todoIdToRemove),
   }));
 }
+
+export function getTodosToUncomplete(todoId: string, allTodos: Todo[]): string[] {
+  const collectDependents = (id: string, collected: Set<string> = new Set()): Set<string> => {
+    const dependents = allTodos.filter(
+      (todo) => todo.completed && todo.references.includes(id) && !collected.has(todo.id)
+    );
+
+    dependents.forEach((todo) => {
+      collected.add(todo.id);
+      collectDependents(todo.id, collected);
+    });
+
+    return collected;
+  };
+
+  return Array.from(collectDependents(todoId));
+}
