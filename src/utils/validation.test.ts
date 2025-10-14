@@ -81,7 +81,7 @@ describe('getTodosToUncomplete', () => {
     expect(result).toEqual(['2']);
   });
 
-  it('중첩된 참조(cascade)도 모두 반환해야 함', () => {
+  it('중첩된 참조도 모두 반환해야 함', () => {
     const todos = [
       createTodo('1', true),
       createTodo('2', true, ['1']),

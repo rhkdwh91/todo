@@ -11,14 +11,6 @@ export const useTodos = (page: number, limit: number, filter: TodoFilter) => {
   });
 };
 
-export const useTodosByIds = (ids: string[]) => {
-  return useQuery({
-    queryKey: [QUERY_KEY, 'by-ids', ids],
-    queryFn: () => todoApi.getTodosByIds(ids),
-    enabled: ids.length > 0,
-  });
-};
-
 export const useCreateTodo = () => {
   const queryClient = useQueryClient();
 
@@ -34,7 +26,10 @@ export const useUpdateTodo = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Todo> }) => todoApi.updateTodo(id, data),
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Todo> }) => {
+      console.log('updateTodo', id, data);
+      await todoApi.updateTodo(id, data);
+    },
     onMutate: async ({ id, data }) => {
       await queryClient.cancelQueries({ queryKey: [QUERY_KEY] });
 
@@ -42,20 +37,23 @@ export const useUpdateTodo = () => {
 
       queryClient.setQueriesData({ queryKey: [QUERY_KEY] }, (old: any) => {
         if (!old) return old;
-        return {
-          ...old,
-          data: old.data.map((todo: Todo) =>
-            todo.id === id ? { ...todo, ...data, updatedAt: new Date().toISOString() } : todo
-          ),
-        };
+
+        if (old.data && Array.isArray(old.data)) {
+          return {
+            ...old,
+            data: old.data.map((todo: Todo) => (todo.id === id ? { ...todo, ...data } : todo)),
+          };
+        }
+
+        return old;
       });
 
       return { previousData };
     },
     onError: (_err, _variables, context) => {
       if (context?.previousData) {
-        context.previousData.forEach(([key, data]) => {
-          queryClient.setQueryData(key, data);
+        context.previousData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
         });
       }
     },
@@ -72,7 +70,37 @@ export const useBatchUpdateTodos = () => {
     mutationFn: (updates: { id: string; data: Partial<Todo> }[]) => {
       return todoApi.batchUpdateTodos(updates);
     },
-    onSuccess: () => {
+    onMutate: async (updates) => {
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEY] });
+
+      const previousData = queryClient.getQueriesData({ queryKey: [QUERY_KEY] });
+
+      queryClient.setQueriesData({ queryKey: [QUERY_KEY] }, (old: any) => {
+        if (!old) return old;
+
+        if (old.data && Array.isArray(old.data)) {
+          return {
+            ...old,
+            data: old.data.map((todo: Todo) => {
+              const update = updates.find((u) => u.id === todo.id);
+              return update ? { ...todo, ...update.data } : todo;
+            }),
+          };
+        }
+
+        return old;
+      });
+
+      return { previousData };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousData) {
+        context.previousData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });

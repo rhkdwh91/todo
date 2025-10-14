@@ -29,7 +29,7 @@ export const TodoList = ({ filter, page, onPageChange }: TodoListProps) => {
     <div className={styles.container}>
       <div className={styles.list}>
         {data.data.map((todo) => (
-          <TodoItem key={todo.id} todo={todo} referencedTodos={data.allTodos} />
+          <TodoItem key={todo.id} todo={todo} />
         ))}
       </div>
 

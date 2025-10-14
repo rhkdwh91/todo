@@ -5,6 +5,7 @@ export interface Todo {
   createdAt: string;
   updatedAt: string;
   references: string[];
+  canComplete?: boolean;
 }
 
 export type TodoFilter = 'all' | 'active' | 'completed';
@@ -20,5 +21,4 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
   totalPages: number;
-  allTodos: Todo[];
 }

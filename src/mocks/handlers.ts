@@ -1,5 +1,5 @@
-import { http, HttpResponse, delay } from 'msw';
-import type { Todo, PaginatedResponse, TodoFormData } from '../types/todo';
+import { delay, http, HttpResponse } from 'msw';
+import type { PaginatedResponse, Todo, TodoFormData } from '../types/todo';
 import { getTodos, saveTodos } from './data';
 import { getCurrentISODate } from '../utils/date';
 import { removeReferenceFromTodos } from '../utils/validation';
@@ -33,7 +33,13 @@ export const handlers = [
     const total = todos.length;
     const start = (page - 1) * limit;
     const end = start + limit;
-    const paginatedTodos = todos.slice(start, end);
+    const paginatedTodos = todos.slice(start, end).map((todo) => ({
+      ...todo,
+      canComplete: todo.references.every((refId) => {
+        const referencedTodo = allTodos.find((t) => t.id === refId);
+        return referencedTodo?.completed === true;
+      }),
+    }));
 
     const response: PaginatedResponse<Todo> = {
       data: paginatedTodos,
@@ -41,23 +47,17 @@ export const handlers = [
       page,
       limit,
       totalPages: Math.ceil(total / limit),
-      allTodos,
     };
 
     return HttpResponse.json(response);
   }),
 
-  http.get(`${BASE_URL}/todos/by-ids`, async ({ request }) => {
-    await delay(100);
+  http.get(`${BASE_URL}/all-todos`, async () => {
+    await delay(300);
 
-    const url = new URL(request.url);
-    const idsParam = url.searchParams.get('ids') || '';
-    const ids = idsParam.split(',').filter(Boolean);
+    const allTodos = getTodos();
 
-    const todos = getTodos();
-    const filteredTodos = todos.filter((todo) => ids.includes(todo.id));
-
-    return HttpResponse.json(filteredTodos);
+    return HttpResponse.json(allTodos);
   }),
 
   http.post(`${BASE_URL}/todos`, async ({ request }) => {

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 import { Select } from '../common/Select';
+import { Badge } from '../common/Badge';
 import { useTodos, useCreateTodo } from '../../hooks/useTodos';
 import styles from './TodoForm.module.css';
 
@@ -30,6 +31,17 @@ export const TodoForm = () => {
     );
   };
 
+  const handleRemoveReference = (id: string) => {
+    setSelectedReferences((prev) => prev.filter((refId) => refId !== id));
+  };
+
+  const getSelectedTodos = () => {
+    if (!todosData) return [];
+    return selectedReferences
+      .map((id) => todosData.data.find((todo) => todo.id === id))
+      .filter((todo) => todo !== undefined);
+  };
+
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
       <div className={styles.inputGroup}>
@@ -43,6 +55,16 @@ export const TodoForm = () => {
           추가
         </Button>
       </div>
+
+      {selectedReferences.length > 0 && (
+        <div className={styles.badgeContainer}>
+          {getSelectedTodos().map((todo) => (
+            <Badge key={todo.id} variant="primary" onRemove={() => handleRemoveReference(todo.id)}>
+              @{todo.id} {todo.text}
+            </Badge>
+          ))}
+        </div>
+      )}
 
       {todosData && todosData.data.length > 0 && (
         <Select

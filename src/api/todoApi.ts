@@ -9,11 +9,8 @@ export const todoApi = {
     return response.data;
   },
 
-  getTodosByIds: async (ids: string[]) => {
-    if (ids.length === 0) return [];
-    const response = await apiClient.get<Todo[]>('/todos/by-ids', {
-      params: { ids: ids.join(',') },
-    });
+  getAllTodos: async () => {
+    const response = await apiClient.get<PaginatedResponse<Todo>>('/all-todos');
     return response.data;
   },
 
