@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import type { Todo } from '../../types/todo';
 import { Input } from '../common/Input';
 import { Select } from '../common/Select';
@@ -9,8 +10,8 @@ interface TodoItemEditProps {
   setEditText: (text: string) => void;
   editReferences: string[];
   setEditReferences: (refs: string[]) => void;
-  cachedAll: Todo[];
-  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onSave: () => void;
+  onCancel: () => void;
 }
 
 export const TodoItemEdit = ({
@@ -19,15 +20,26 @@ export const TodoItemEdit = ({
   setEditText,
   editReferences,
   setEditReferences,
-  cachedAll,
-  onKeyDown,
+  onSave,
+  onCancel,
 }: TodoItemEditProps) => {
+  const queryClient = useQueryClient();
+  const cachedAll = queryClient.getQueryData<Todo[]>(['todos', 'all']) ?? [];
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      onSave();
+    } else if (e.key === 'Escape') {
+      onCancel();
+    }
+  };
+
   return (
     <div className={styles.editForm}>
       <Input
         value={editText}
         onChange={(e) => setEditText(e.target.value)}
-        onKeyDown={onKeyDown}
+        onKeyDown={handleKeyDown}
         autoFocus
       />
       <Select

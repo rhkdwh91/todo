@@ -17,21 +17,12 @@ export const TodoItem = ({ todo }: TodoItemProps) => {
     setEditText,
     editReferences,
     setEditReferences,
-    cachedAll,
     handleToggle,
     startEditing,
     cancelEditing,
     saveEdit,
     handleDelete,
   } = useTodoItemActions({ todo });
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      saveEdit();
-    } else if (e.key === 'Escape') {
-      cancelEditing();
-    }
-  };
 
   return (
     <div className={`${styles.item} ${todo.completed ? styles.completed : ''}`}>
@@ -49,8 +40,8 @@ export const TodoItem = ({ todo }: TodoItemProps) => {
             setEditText={setEditText}
             editReferences={editReferences}
             setEditReferences={setEditReferences}
-            cachedAll={cachedAll}
-            onKeyDown={handleKeyDown}
+            onSave={saveEdit}
+            onCancel={cancelEditing}
           />
         ) : (
           <TodoItemView todo={todo} />

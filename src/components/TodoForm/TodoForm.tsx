@@ -1,17 +1,21 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useMemo, type FormEvent } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import type { Todo } from '../../types/todo';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 import { Select } from '../common/Select';
 import { Badge } from '../common/Badge';
-import { useTodos, useCreateTodo } from '../../hooks/useTodos';
+import { useCreateTodo } from '../../hooks/useTodos';
 import styles from './TodoForm.module.css';
 
 export const TodoForm = () => {
   const [text, setText] = useState('');
   const [selectedReferences, setSelectedReferences] = useState<string[]>([]);
 
-  const { data: todosData } = useTodos(1, 100, 'all');
+  const queryClient = useQueryClient();
   const createTodo = useCreateTodo();
+
+  const cachedAll = queryClient.getQueryData<Todo[]>(['todos', 'all']) ?? [];
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -27,6 +31,9 @@ export const TodoForm = () => {
           setText('');
           setSelectedReferences([]);
         },
+        onError: () => {
+          alert('할 일 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
+        },
       }
     );
   };
@@ -35,12 +42,12 @@ export const TodoForm = () => {
     setSelectedReferences((prev) => prev.filter((refId) => refId !== id));
   };
 
-  const getSelectedTodos = () => {
-    if (!todosData) return [];
+  const selectedTodos = useMemo(() => {
     return selectedReferences
-      .map((id) => todosData.data.find((todo) => todo.id === id))
+      .map((id) => cachedAll.find((todo) => todo.id === id))
       .filter((todo) => todo !== undefined);
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedReferences]);
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
@@ -58,7 +65,7 @@ export const TodoForm = () => {
 
       {selectedReferences.length > 0 && (
         <div className={styles.badgeContainer}>
-          {getSelectedTodos().map((todo) => (
+          {selectedTodos.map((todo) => (
             <Badge key={todo.id} variant="primary" onRemove={() => handleRemoveReference(todo.id)}>
               @{todo.id} {todo.text}
             </Badge>
@@ -66,9 +73,9 @@ export const TodoForm = () => {
         </div>
       )}
 
-      {todosData && todosData.data.length > 0 && (
+      {cachedAll.length > 0 && (
         <Select
-          todos={todosData.data}
+          todos={cachedAll}
           selectedIds={selectedReferences}
           onChange={setSelectedReferences}
           label="참조 (선택사항)"
