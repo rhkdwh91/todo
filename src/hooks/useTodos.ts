@@ -1,8 +1,36 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { todoApi } from '../api/todoApi';
-import type { Todo, TodoFormData, TodoFilter } from '../types/todo';
+import type { Todo, TodoFormData, TodoFilter, PaginatedResponse } from '../types/todo';
 
 const QUERY_KEY = 'todos';
+
+const updateTodosInCache = (queryClient: QueryClient, updater: (todos: Todo[]) => Todo[]) => {
+  queryClient.setQueriesData<PaginatedResponse<Todo>>({ queryKey: [QUERY_KEY] }, (old) => {
+    if (!old?.data || !Array.isArray(old.data)) return old;
+    return { ...old, data: updater(old.data) };
+  });
+};
+
+const handleOptimisticUpdate = async (
+  queryClient: QueryClient,
+  updater: (todos: Todo[]) => Todo[]
+) => {
+  await queryClient.cancelQueries({ queryKey: [QUERY_KEY] });
+  const previousData = queryClient.getQueriesData({ queryKey: [QUERY_KEY] });
+  updateTodosInCache(queryClient, updater);
+  return { previousData };
+};
+
+const handleOptimisticError = (
+  queryClient: QueryClient,
+  context: { previousData: [queryKey: unknown, data: unknown][] } | undefined
+) => {
+  if (context?.previousData) {
+    context.previousData.forEach(([queryKey, data]) => {
+      queryClient.setQueryData(queryKey as Parameters<typeof queryClient.setQueryData>[0], data);
+    });
+  }
+};
 
 export const useTodos = (page: number, limit: number, filter: TodoFilter) => {
   return useQuery({
@@ -27,35 +55,15 @@ export const useUpdateTodo = () => {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<Todo> }) => {
-      console.log('updateTodo', id, data);
       await todoApi.updateTodo(id, data);
     },
     onMutate: async ({ id, data }) => {
-      await queryClient.cancelQueries({ queryKey: [QUERY_KEY] });
-
-      const previousData = queryClient.getQueriesData({ queryKey: [QUERY_KEY] });
-
-      queryClient.setQueriesData({ queryKey: [QUERY_KEY] }, (old: any) => {
-        if (!old) return old;
-
-        if (old.data && Array.isArray(old.data)) {
-          return {
-            ...old,
-            data: old.data.map((todo: Todo) => (todo.id === id ? { ...todo, ...data } : todo)),
-          };
-        }
-
-        return old;
-      });
-
-      return { previousData };
+      return handleOptimisticUpdate(queryClient, (todos) =>
+        todos.map((todo) => (todo.id === id ? { ...todo, ...data } : todo))
+      );
     },
     onError: (_err, _variables, context) => {
-      if (context?.previousData) {
-        context.previousData.forEach(([queryKey, data]) => {
-          queryClient.setQueryData(queryKey, data);
-        });
-      }
+      handleOptimisticError(queryClient, context);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
@@ -71,34 +79,15 @@ export const useBatchUpdateTodos = () => {
       return todoApi.batchUpdateTodos(updates);
     },
     onMutate: async (updates) => {
-      await queryClient.cancelQueries({ queryKey: [QUERY_KEY] });
-
-      const previousData = queryClient.getQueriesData({ queryKey: [QUERY_KEY] });
-
-      queryClient.setQueriesData({ queryKey: [QUERY_KEY] }, (old: any) => {
-        if (!old) return old;
-
-        if (old.data && Array.isArray(old.data)) {
-          return {
-            ...old,
-            data: old.data.map((todo: Todo) => {
-              const update = updates.find((u) => u.id === todo.id);
-              return update ? { ...todo, ...update.data } : todo;
-            }),
-          };
-        }
-
-        return old;
-      });
-
-      return { previousData };
+      return handleOptimisticUpdate(queryClient, (todos) =>
+        todos.map((todo) => {
+          const update = updates.find((u) => u.id === todo.id);
+          return update ? { ...todo, ...update.data } : todo;
+        })
+      );
     },
     onError: (_err, _variables, context) => {
-      if (context?.previousData) {
-        context.previousData.forEach(([queryKey, data]) => {
-          queryClient.setQueryData(queryKey, data);
-        });
-      }
+      handleOptimisticError(queryClient, context);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });

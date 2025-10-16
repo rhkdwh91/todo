@@ -7,11 +7,12 @@ import { TodoList } from '../components/TodoList';
 import { Pagination } from '../components/Pagination';
 import { useTodos } from '../hooks/useTodos';
 import { todoApi } from '../api/todoApi';
+import { PAGINATION } from '../constants/pagination';
 import styles from './HomePage.module.css';
 
 export const HomePage = () => {
   const [filter, setFilter] = useState<FilterType>('all');
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState<number>(PAGINATION.INITIAL_PAGE);
 
   useQuery({
     queryKey: ['todos', 'all'],
@@ -19,11 +20,11 @@ export const HomePage = () => {
     staleTime: Infinity,
   });
 
-  const { data, isLoading, error } = useTodos(page, 10, filter);
+  const { data, isLoading, error } = useTodos(page, PAGINATION.DEFAULT_PAGE_SIZE, filter);
 
   const handleFilterChange = (newFilter: FilterType) => {
     setFilter(newFilter);
-    setPage(1);
+    setPage(PAGINATION.INITIAL_PAGE);
   };
 
   return (
@@ -41,7 +42,11 @@ export const HomePage = () => {
         {data && <TodoList todos={data.data} />}
 
         {data && data.totalPages > 1 && (
-          <Pagination currentPage={data.page} totalPages={data.totalPages} onPageChange={setPage} />
+          <Pagination
+            currentPage={data.page}
+            totalPages={data.totalPages}
+            onPageChange={(page) => setPage(page)}
+          />
         )}
       </main>
     </div>

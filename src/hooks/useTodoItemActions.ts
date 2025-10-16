@@ -8,6 +8,10 @@ interface UseTodoItemActionsProps {
   todo: Todo;
 }
 
+const showErrorAlert = (action: string) => {
+  alert(`${action} 중 오류가 발생했습니다. 다시 시도해주세요.`);
+};
+
 export const useTodoItemActions = ({ todo }: UseTodoItemActionsProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(todo.text);
@@ -37,9 +41,7 @@ export const useTodoItemActions = ({ todo }: UseTodoItemActionsProps) => {
           ...todosToUncomplete.map((id) => ({ id, data: { completed: false } })),
         ],
         {
-          onError: () => {
-            alert('미완료 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
-          },
+          onError: () => showErrorAlert('미완료 처리'),
         }
       );
     } else {
@@ -49,9 +51,7 @@ export const useTodoItemActions = ({ todo }: UseTodoItemActionsProps) => {
           data: { completed: false },
         },
         {
-          onError: () => {
-            alert('미완료 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
-          },
+          onError: () => showErrorAlert('미완료 처리'),
         }
       );
     }
@@ -64,9 +64,7 @@ export const useTodoItemActions = ({ todo }: UseTodoItemActionsProps) => {
         data: { completed: true },
       },
       {
-        onError: () => {
-          alert('완료 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
-        },
+        onError: () => showErrorAlert('완료 처리'),
       }
     );
   };
@@ -106,9 +104,7 @@ export const useTodoItemActions = ({ todo }: UseTodoItemActionsProps) => {
         onSuccess: () => {
           setIsEditing(false);
         },
-        onError: () => {
-          alert('수정 중 오류가 발생했습니다. 다시 시도해주세요.');
-        },
+        onError: () => showErrorAlert('수정'),
       }
     );
   };
@@ -116,9 +112,7 @@ export const useTodoItemActions = ({ todo }: UseTodoItemActionsProps) => {
   const handleDelete = () => {
     if (confirm('정말 삭제하시겠습니까?')) {
       deleteTodo.mutate(todo.id, {
-        onError: () => {
-          alert('삭제 중 오류가 발생했습니다. 다시 시도해주세요.');
-        },
+        onError: () => showErrorAlert('삭제'),
       });
     }
   };

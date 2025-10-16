@@ -3,6 +3,8 @@ import type { PaginatedResponse, Todo, TodoFormData } from '../types/todo';
 import { getTodos, saveTodos } from './data';
 import { getCurrentISODate } from '../utils/date';
 import { removeReferenceFromTodos } from '../utils/validation';
+import { API_DELAY_MS } from '../constants/api';
+import { PAGINATION } from '../constants/pagination';
 
 const BASE_URL = '/api';
 
@@ -14,11 +16,11 @@ const getNextId = (todos: Todo[]): string => {
 
 export const handlers = [
   http.get(`${BASE_URL}/todos`, async ({ request }) => {
-    await delay(300);
+    await delay(API_DELAY_MS);
 
     const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '10');
+    const page = parseInt(url.searchParams.get('page') || String(PAGINATION.INITIAL_PAGE));
+    const limit = parseInt(url.searchParams.get('limit') || String(PAGINATION.DEFAULT_PAGE_SIZE));
     const filter = url.searchParams.get('filter') || 'all';
 
     const allTodos = getTodos();
@@ -53,7 +55,7 @@ export const handlers = [
   }),
 
   http.get(`${BASE_URL}/all-todos`, async () => {
-    await delay(300);
+    await delay(API_DELAY_MS);
 
     const allTodos = getTodos();
 
@@ -61,7 +63,7 @@ export const handlers = [
   }),
 
   http.post(`${BASE_URL}/todos`, async ({ request }) => {
-    await delay(300);
+    await delay(API_DELAY_MS);
 
     const body = (await request.json()) as TodoFormData;
     const todos = getTodos();
@@ -82,7 +84,7 @@ export const handlers = [
   }),
 
   http.patch(`${BASE_URL}/todos/batch`, async ({ request }) => {
-    await delay(300);
+    await delay(API_DELAY_MS);
 
     const body = (await request.json()) as { updates: { id: string; data: Partial<Todo> }[] };
     const todos = getTodos();
@@ -106,7 +108,7 @@ export const handlers = [
   }),
 
   http.patch(`${BASE_URL}/todos/:id`, async ({ request, params }) => {
-    await delay(300);
+    await delay(API_DELAY_MS);
 
     const { id } = params;
     const body = (await request.json()) as Partial<Todo>;
@@ -129,7 +131,7 @@ export const handlers = [
   }),
 
   http.delete(`${BASE_URL}/todos/:id`, async ({ params }) => {
-    await delay(300);
+    await delay(API_DELAY_MS);
 
     const { id } = params as { id: string };
     let todos = getTodos();

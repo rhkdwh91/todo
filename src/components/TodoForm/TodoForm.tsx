@@ -8,6 +8,10 @@ import { Badge } from '../common/Badge';
 import { useCreateTodo } from '../../hooks/useTodos';
 import styles from './TodoForm.module.css';
 
+const showErrorAlert = (action: string) => {
+  alert(`${action} 중 오류가 발생했습니다. 다시 시도해주세요.`);
+};
+
 export const TodoForm = () => {
   const [text, setText] = useState('');
   const [selectedReferences, setSelectedReferences] = useState<string[]>([]);
@@ -31,9 +35,7 @@ export const TodoForm = () => {
           setText('');
           setSelectedReferences([]);
         },
-        onError: () => {
-          alert('할 일 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
-        },
+        onError: () => showErrorAlert('할 일 생성'),
       }
     );
   };
@@ -45,9 +47,8 @@ export const TodoForm = () => {
   const selectedTodos = useMemo(() => {
     return selectedReferences
       .map((id) => cachedAll.find((todo) => todo.id === id))
-      .filter((todo) => todo !== undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedReferences]);
+      .filter((todo): todo is Todo => todo !== undefined);
+  }, [selectedReferences, cachedAll]);
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
