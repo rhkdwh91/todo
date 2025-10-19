@@ -1,3 +1,4 @@
+import { clsx } from 'clsx';
 import styles from './Badge.module.css';
 
 interface BadgeProps {
@@ -8,7 +9,7 @@ interface BadgeProps {
 
 export const Badge = ({ children, onRemove, variant = 'default' }: BadgeProps) => {
   return (
-    <span className={`${styles.badge} ${styles[variant]}`}>
+    <span className={clsx(styles.badge, styles[variant])}>
       <span className={styles.text}>{children}</span>
       {onRemove && (
         <button type="button" className={styles.removeButton} onClick={onRemove} aria-label="제거">

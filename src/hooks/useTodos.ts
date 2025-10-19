@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useSuspenseQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { todoApi } from '../api/todoApi';
 import type { Todo, TodoFormData, TodoFilter, PaginatedResponse } from '../types/todo';
 
@@ -33,7 +33,7 @@ const handleOptimisticError = (
 };
 
 export const useTodos = (page: number, limit: number, filter: TodoFilter) => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: [QUERY_KEY, page, limit, filter],
     queryFn: () => todoApi.getTodos(page, limit, filter),
   });

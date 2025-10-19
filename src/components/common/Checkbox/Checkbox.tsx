@@ -1,5 +1,6 @@
 import { forwardRef } from 'react';
 import type { InputHTMLAttributes } from 'react';
+import { clsx } from 'clsx';
 import styles from './Checkbox.module.css';
 
 interface CheckboxProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -7,7 +8,7 @@ interface CheckboxProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ label, className = '', id, ...props }, ref) => {
+  ({ label, className, id, ...props }, ref) => {
     const checkboxId = id || label?.toLowerCase().replace(/\s+/g, '-');
 
     return (
@@ -16,7 +17,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           type="checkbox"
           id={checkboxId}
           ref={ref}
-          className={`${styles.checkbox} ${className}`}
+          className={clsx(styles.checkbox, className)}
           {...props}
         />
         {label && (

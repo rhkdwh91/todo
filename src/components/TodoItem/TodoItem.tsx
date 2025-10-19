@@ -1,4 +1,5 @@
 import type { Todo } from '../../types/todo';
+import { clsx } from 'clsx';
 import { Checkbox } from '../common/Checkbox';
 import { useTodoItemActions } from '../../hooks/useTodoItemActions';
 import { TodoItemView } from './TodoItemView';
@@ -25,7 +26,7 @@ export const TodoItem = ({ todo }: TodoItemProps) => {
   } = useTodoItemActions({ todo });
 
   return (
-    <div className={`${styles.item} ${todo.completed ? styles.completed : ''}`}>
+    <div className={clsx(styles.item, todo.completed && styles.completed)}>
       <Checkbox
         checked={todo.completed}
         onChange={handleToggle}

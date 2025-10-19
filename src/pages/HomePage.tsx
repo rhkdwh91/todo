@@ -1,11 +1,10 @@
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { TodoFilter as FilterType } from '../types/todo';
 import { TodoForm } from '../components/TodoForm';
 import { TodoFilter } from '../components/TodoFilter';
 import { TodoList } from '../components/TodoList';
-import { Pagination } from '../components/Pagination';
-import { useTodos } from '../hooks/useTodos';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { todoApi } from '../api/todoApi';
 import { PAGINATION } from '../constants/pagination';
 import styles from './HomePage.module.css';
@@ -19,8 +18,6 @@ export const HomePage = () => {
     queryFn: () => todoApi.getAllTodos(),
     staleTime: Infinity,
   });
-
-  const { data, isLoading, error } = useTodos(page, PAGINATION.DEFAULT_PAGE_SIZE, filter);
 
   const handleFilterChange = (newFilter: FilterType) => {
     setFilter(newFilter);
@@ -37,17 +34,11 @@ export const HomePage = () => {
         <TodoForm />
         <TodoFilter current={filter} onChange={handleFilterChange} />
 
-        {isLoading && <div className={styles.message}>로딩 중...</div>}
-        {error && <div className={styles.error}>에러가 발생했습니다.</div>}
-        {data && <TodoList todos={data.data} />}
-
-        {data && data.totalPages > 1 && (
-          <Pagination
-            currentPage={data.page}
-            totalPages={data.totalPages}
-            onPageChange={(page) => setPage(page)}
-          />
-        )}
+        <ErrorBoundary>
+          <Suspense fallback={<div className={styles.loading}>로딩 중...</div>}>
+            <TodoList filter={filter} page={page} onPageChange={setPage} />
+          </Suspense>
+        </ErrorBoundary>
       </main>
     </div>
   );

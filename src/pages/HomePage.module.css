@@ -21,17 +21,10 @@
   margin: 0 auto;
 }
 
-.message {
+.loading {
   text-align: center;
   padding: 3rem;
   color: #6b7280;
-  font-size: 1.125rem;
-}
-
-.error {
-  text-align: center;
-  padding: 3rem;
-  color: #ef4444;
   font-size: 1.125rem;
 }
 
