@@ -22,6 +22,7 @@
 - **React 19.1.1, TypeScript**: 최신 React와 타입 안정성
 - **@tanstack/react-query**: 서버 상태 관리 및 Optimistic Updates
 - **스타일링**: CSS Modules (컴포넌트 스코프 스타일)
+- **clsx**: 조건부 className 관리 (가볍고 직관적)
 - **Mock API**: MSW (Mock Service Worker) + LocalStorage 영속성
 - **날짜**: dayjs (한국어 로케일 및 가벼움)
 - **테스팅**: Vitest (유닛), Playwright (E2E)
@@ -30,7 +31,8 @@
 ```
 src/
 ├── components/
-│   ├── common/          # Button, Input, Checkbox, Select
+│   ├── common/          # Badge, Button, Input, Checkbox, Select
+│   ├── ErrorBoundary/   # 에러 경계 처리
 │   ├── TodoForm/        # 할 일 생성 폼
 │   ├── TodoItem/        # 할 일 항목
 │   ├── TodoList/        # 할 일 목록
